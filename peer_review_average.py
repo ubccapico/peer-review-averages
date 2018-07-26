@@ -4,7 +4,7 @@ Grading
 
 """
 
-#these are the packages you need to install, this will try to install them, otherwise use pip to install
+#These are the packages you need to install, this will try to install them, otherwise use pip to install
 
 try:
     import requests
@@ -27,6 +27,7 @@ except:
     pip.main(['install', 'json'])
     import json
 
+#Ensure Canvas API token is in the designated file Canvas API Token.txt
 print ('Before you begin the process, please ensure you have copy & pasted your Canvas API token into the file Canvas API Token.txt.')
 confirmation = input ('Input any key to continue:')
 
@@ -34,23 +35,23 @@ with open('Canvas API Token.txt','r') as f:
     for line in f:
         for word in line.split():
            token = word   
-#course url
+#Course url
 url = "https://ubc.instructure.com/"
 
-#course number
+#Course number
 course = input('Input course ID and hit ENTER:\n')
 
-#the assignment ID number
+#Input assignment ID number (located in URL)
 assignment_id = input('Input assignment ID number and hit ENTER:\n')
 
 print ('Processing data, please wait......\n')
 
 try:
-#get the assignment information
+#Obtaining the assignment information (settings, assignment id, rubric id)
     assignmentInfo = requests.get(url + '/api/v1/courses/' + str(course) + '/assignments/' + str(assignment_id),
                  headers= {'Authorization': 'Bearer ' + token})
 
-#get the assignment rubric id for the assignment
+#Extracting assignment rubric id/rubric for the assignment
     assignmentInfo = json.loads(assignmentInfo.text)
     rubric_id = str(assignmentInfo['rubric_settings']['id'])
 
@@ -62,11 +63,11 @@ try:
 
     rubric_return = json.loads(r.text)
 
-#artifact_id, artifact_type, assessor_id, score
+#Obtaining assessor_id (person who did peer review), score for the peer reviews
     assessments_df = pd.DataFrame(rubric_return['assessments'])
 
 
-#peer review information
+#Obtaining user_id (person who was peer reviewed), completion and submission comments
     peerReview = requests.get(url + '/api/v1/courses/' + str(course) + '/assignments/' + assignment_id + '/peer_reviews',
                  headers= {'Authorization': 'Bearer ' + token})
 
@@ -74,12 +75,12 @@ try:
     peerReview_df = pd.read_json(peerReview.text)
     peerReview_df['user_id'] = peerReview_df['user_id'].astype(str)
 
-#new_df = pd.merge(A_df, B_df,  how='left', left_on=['A_c1','c2'], right_on = ['B_c1','c2'])
+#Merging data together into one csv file named 'peer review information.csv'
     merged_df = pd.merge(peerReview_df, assessments_df, how='outer', left_on=['assessor_id', 'asset_id'], right_on=['assessor_id', 'artifact_id'])
     merged_df.to_csv('peer review information.csv')
 
-#create the meanscore table with user_id and mean score
-# make sure the mean score is rounded to 2, and the user_id is a string 
+#Create a table table with user_id and mean peer review score of each assignment
+#(make sure the mean score is rounded to 2, and the user_id is a string)
     meanScore = pd.DataFrame(merged_df.groupby('user_id')['score'].mean().round(2).reset_index())
     meanScore = meanScore[pd.notnull(meanScore['score'])]
     meanScore['user_id'] = meanScore['user_id'].astype(str)
@@ -87,8 +88,9 @@ try:
 
     
     print('Data successfully gathered.\n')
+#if input is True, uploads scores onto Canvas Gradecenter (does not create new assignment)
     upload = input ('Type True to upload peer review scores onto Gradecenter.\n')
-#upload mean score to GradeCentre
+
     if upload==True:
         for index, row in meanScore.iterrows():
         
