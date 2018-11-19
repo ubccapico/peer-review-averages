@@ -90,7 +90,6 @@ student_list = requests.get('{}/api/v1/courses/{}/users'.format(url, course),
 no_student_id = False
 if student_list.ok:
     student_df = Helper.paginate_list(student_list, token)
-    student_df.to_csv('testing.csv')
     try:
         student_df = student_df[['id', 'name', 'sis_user_id']]
     except:
