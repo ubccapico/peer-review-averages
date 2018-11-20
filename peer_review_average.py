@@ -82,7 +82,7 @@ peerReview_df = pd.read_json(peerReview.text)
 peerReview_df['user_id'] = peerReview_df['user_id'].astype(str)
 
 #Merge two dataframes to provide combined data on peer review
-merged_df = pd.merge(peerReview_df, assessments_df, how='inner', left_on=['assessor_id', 'asset_id'], right_on=['assessor_id', 'artifact_id'])
+merged_df = pd.merge(peerReview_df, assessments_df, how='left', left_on=['assessor_id', 'asset_id'], right_on=['assessor_id', 'artifact_id'])
 
 #Get student list
 print("Please wait (3/4). Gathering student information...")
@@ -105,7 +105,7 @@ else:
     exit()
 
 #Merge 
-merged_df = pd.merge(merged_df, student_df, how='inner', left_on=['assessor_id'], right_on=['id'])
+merged_df = pd.merge(merged_df, student_df, how='left', left_on=['assessor_id'], right_on=['id'])
 if(no_student_id):
     merged_df = merged_df.rename(columns={"name":"assessor_name"}).drop(['id'], axis=1)
 else:
