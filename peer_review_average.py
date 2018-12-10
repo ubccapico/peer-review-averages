@@ -82,7 +82,7 @@ if __name__ == '__main__':
     
     #peer review information
     peerReview = requests.get(url + '/api/v1/courses/' + str(course) + '/assignments/' + assignment_id + '/peer_reviews',
-                              params ={'include[]': 'submission_comments'},
+                              params = {'include[]': 'submission_comments'},
                               headers= {'Authorization': 'Bearer ' + token})
     
     if not peerReview.ok:
@@ -95,6 +95,7 @@ if __name__ == '__main__':
     #Merge two dataframes to provide combined data on peer review
     merged_df = pd.merge(peerReview_df, assessments_df, how='left', left_on=['assessor_id', 'asset_id'], right_on=['assessor_id', 'artifact_id'])
     
+    merged_df.to_csv('{}_peerInfo.csv'.format(course), index=False)
     #Get student list
     print("Please wait (3/4). Gathering student information...")
     student_list = requests.get('{}/api/v1/courses/{}/users'.format(url, course),
@@ -123,7 +124,7 @@ if __name__ == '__main__':
         merged_df = merged_df.rename(columns={"name":"assessor_name", "sis_user_id":"assessor_sis_id"}).drop(['id'], axis=1)
     
     
-    merged_df = pd.merge(merged_df, student_df, how='inner', left_on=['user_id'], right_on=['id'])
+    merged_df = pd.merge(merged_df, student_df, how='left', left_on=['user_id'], right_on=['id'])
     if(no_student_id):
         merged_df = merged_df.rename(columns={"name":"user_name"}).drop(['id'], axis=1)
         column_list = merged_df.columns.tolist()
